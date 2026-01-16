@@ -5,9 +5,9 @@ A modern RESTful API built with Python Flask for task management, featuring user
 
 ## Features
 - 🔒 User authentication with JWT for secure access
-- 📝 CRUD operations for tasks (Create, Read, Update, Delete)
+- 📋 CRUD operations for tasks (Create, Read, Update, Delete)
 - 📂 Task categorization and prioritization
-- 👤 User-specific task management with role-based access control
+- 👤 User-specific task management with role-based access
 - 🗄️ Integration with a PostgreSQL database for persistent storage
 - 📖 API documentation using Swagger for easy reference
 - ✅ Unit tests for API endpoints to ensure reliability
@@ -16,15 +16,15 @@ A modern RESTful API built with Python Flask for task management, featuring user
 ### Backend
 - 🐍 Python
 - ⚡ Flask
-- 🗄️ SQLAlchemy
-- 🐘 PostgreSQL
+- 🗄️ PostgreSQL
+- 🔗 SQLAlchemy
 - 🔑 JWT
 
 ### DevOps
 - 🐳 Docker
 
 ## Installation
-To set up the Flask Task Manager API, follow these steps:
+To set up the project locally, follow these steps:
 
 - Clone the repository
 bash
@@ -47,15 +47,16 @@ bash
 pip install -r requirements.txt
 - Set up the database
 bash
-flask db upgrade
+# Create the database
+# Ensure PostgreSQL is running and configured
 - Run the application
 bash
 flask run
 ## Usage
-Once the application is running, you can access the API at `http://127.0.0.1:5000`. Use tools like Postman or cURL to interact with the API endpoints.
+Once the application is running, you can access the API at `http://localhost:5000`. Use tools like Postman or curl to interact with the endpoints.
 
 ## API Documentation
-API documentation is available using Swagger. After running the application, navigate to `http://127.0.0.1:5000/swagger` to explore the available endpoints and their usage.
+API documentation is available using Swagger. After running the application, navigate to `http://localhost:5000/swagger` to explore the available endpoints and their usage.
 
 ## Testing
 To run the tests for the API, execute the following command:
@@ -65,21 +66,20 @@ pytest
 For deployment, you can use Docker. Build the Docker image with:
 bash
 docker build -t flask-task-manager-api .
-Run the Docker container with:
+Run the container with:
 bash
 docker run -p 5000:5000 flask-task-manager-api
 ## Contributing
-Contributions are welcome! Please follow these steps to contribute:
+Contributions are welcome! Please follow these steps:
 - Fork the repository
 - Create a new branch (`git checkout -b feature/YourFeature`)
-- Make your changes
-- Commit your changes (`git commit -m 'Add some feature'`)
+- Make your changes and commit them (`git commit -m 'Add some feature'`)
 - Push to the branch (`git push origin feature/YourFeature`)
 - Open a pull request
 
 ## License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 - Thanks to the Flask community for their support and resources.
-- Special thanks to contributors and users for their feedback and suggestions.
+- Special thanks to contributors and users who provide feedback and improvements.
