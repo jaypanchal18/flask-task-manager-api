@@ -1,33 +1,30 @@
 import os
-from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
-from flask import Flask
-from flask_sqlalchemy import SQLAlchemy
 
-# Initialize Flask app
-app = Flask(__name__)
+class Config:
+    """Base configuration."""
+    SECRET_KEY = os.environ.get('SECRET_KEY') or 'a_default_secret_key'
+    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'postgresql://user:password@localhost/dbname'
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    JWT_SECRET_KEY = os.environ.get('JWT_SECRET_KEY') or 'a_default_jwt_secret_key'
+    DEBUG = False
 
-# Database configuration
-DATABASE_URL = os.getenv('DATABASE_URL', 'postgresql://user:password@localhost:5432/task_manager')
+class DevelopmentConfig(Config):
+    """Development configuration."""
+    DEBUG = True
 
-app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+class TestingConfig(Config):
+    """Testing configuration."""
+    TESTING = True
+    SQLALCHEMY_DATABASE_URI = os.environ.get('TEST_DATABASE_URL') or 'postgresql://user:password@localhost/test_dbname'
 
-# Initialize SQLAlchemy
-db = SQLAlchemy(app)
+class ProductionConfig(Config):
+    """Production configuration."""
+    DEBUG = False
 
-# Base model for SQLAlchemy
-Base = declarative_base()
+config_by_name = {
+    'dev': DevelopmentConfig,
+    'test': TestingConfig,
+    'prod': ProductionConfig
+}
 
-# Function to create the database
-def create_database():
-    try:
-        engine = create_engine(DATABASE_URL)
-        Base.metadata.create_all(engine)
-        print("Database created successfully.")
-    except Exception as e:
-        print(f"Error creating database: {e}")
-
-if __name__ == "__main__":
-    create_database()
+key = Config.SECRET_KEY
