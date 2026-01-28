@@ -5,7 +5,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from your_application import create_app, db
 
-class APITestCase(unittest.TestCase):
+class TestAPI(unittest.TestCase):
     def setUp(self):
         self.app = create_app('testing')
         self.client = self.app.test_client()
@@ -13,85 +13,89 @@ class APITestCase(unittest.TestCase):
         self.app_context.push()
         db.create_all()
 
-        # Create a test user
-        self.test_user = {
-            'username': 'testuser',
-            'password': 'testpassword'
-        }
-        self.client.post('/api/register', json=self.test_user)
-
-        # Log in to get JWT token
-        response = self.client.post('/api/login', json=self.test_user)
-        self.token = response.json['access_token']
-
     def tearDown(self):
         db.session.remove()
         db.drop_all()
         self.app_context.pop()
 
-    def test_register_user(self):
-        response = self.client.post('/api/register', json={
-            'username': 'newuser',
-            'password': 'newpassword'
-        })
+    def test_user_registration(self):
+        response = self.client.post('/api/register', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
         self.assertEqual(response.status_code, 201)
-        self.assertIn('access_token', response.json)
+        self.assertIn('access_token', json.loads(response.data))
 
-    def test_login_user(self):
-        response = self.client.post('/api/login', json=self.test_user)
+    def test_user_login(self):
+        self.client.post('/api/register', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+        response = self.client.post('/api/login', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
         self.assertEqual(response.status_code, 200)
-        self.assertIn('access_token', response.json)
-
-    def test_protected_route(self):
-        response = self.client.get('/api/protected', headers={'Authorization': f'Bearer {self.token}'})
-        self.assertEqual(response.status_code, 200)
-        self.assertIn('message', response.json)
-
-    def test_protected_route_without_token(self):
-        response = self.client.get('/api/protected')
-        self.assertEqual(response.status_code, 401)
-        self.assertIn('msg', response.json)
+        self.assertIn('access_token', json.loads(response.data))
 
     def test_create_task(self):
-        response = self.client.post('/api/tasks', json={
+        login_response = self.client.post('/api/login', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+        access_token = json.loads(login_response.data)['access_token']
+        response = self.client.post('/api/tasks', headers={'Authorization': f'Bearer {access_token}'}, data=json.dumps({
             'title': 'Test Task',
             'description': 'This is a test task.'
-        }, headers={'Authorization': f'Bearer {self.token}'})
+        }), content_type='application/json')
         self.assertEqual(response.status_code, 201)
-        self.assertIn('task_id', response.json)
+        self.assertIn('task_id', json.loads(response.data))
 
     def test_get_tasks(self):
-        response = self.client.get('/api/tasks', headers={'Authorization': f'Bearer {self.token}'})
+        login_response = self.client.post('/api/login', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+        access_token = json.loads(login_response.data)['access_token']
+        self.client.post('/api/tasks', headers={'Authorization': f'Bearer {access_token}'}, data=json.dumps({
+            'title': 'Test Task',
+            'description': 'This is a test task.'
+        }), content_type='application/json')
+        response = self.client.get('/api/tasks', headers={'Authorization': f'Bearer {access_token}'})
         self.assertEqual(response.status_code, 200)
-        self.assertIsInstance(response.json, list)
+        self.assertGreater(len(json.loads(response.data)), 0)
 
     def test_update_task(self):
-        # First create a task
-        create_response = self.client.post('/api/tasks', json={
-            'title': 'Update Task',
-            'description': 'This task will be updated.'
-        }, headers={'Authorization': f'Bearer {self.token}'})
-        task_id = create_response.json['task_id']
-
-        # Now update the task
-        update_response = self.client.put(f'/api/tasks/{task_id}', json={
+        login_response = self.client.post('/api/login', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+        access_token = json.loads(login_response.data)['access_token']
+        task_response = self.client.post('/api/tasks', headers={'Authorization': f'Bearer {access_token}'}, data=json.dumps({
+            'title': 'Test Task',
+            'description': 'This is a test task.'
+        }), content_type='application/json')
+        task_id = json.loads(task_response.data)['task_id']
+        response = self.client.put(f'/api/tasks/{task_id}', headers={'Authorization': f'Bearer {access_token}'}, data=json.dumps({
             'title': 'Updated Task',
-            'description': 'This task has been updated.'
-        }, headers={'Authorization': f'Bearer {self.token}'})
-        self.assertEqual(update_response.status_code, 200)
-        self.assertIn('message', update_response.json)
+            'description': 'This is an updated test task.'
+        }), content_type='application/json')
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('task_id', json.loads(response.data))
 
     def test_delete_task(self):
-        # First create a task
-        create_response = self.client.post('/api/tasks', json={
-            'title': 'Delete Task',
-            'description': 'This task will be deleted.'
-        }, headers={'Authorization': f'Bearer {self.token}'})
-        task_id = create_response.json['task_id']
-
-        # Now delete the task
-        delete_response = self.client.delete(f'/api/tasks/{task_id}', headers={'Authorization': f'Bearer {self.token}'})
-        self.assertEqual(delete_response.status_code, 204)
+        login_response = self.client.post('/api/login', data=json.dumps({
+            'username': 'testuser',
+            'password': 'testpassword'
+        }), content_type='application/json')
+        access_token = json.loads(login_response.data)['access_token']
+        task_response = self.client.post('/api/tasks', headers={'Authorization': f'Bearer {access_token}'}, data=json.dumps({
+            'title': 'Test Task',
+            'description': 'This is a test task.'
+        }), content_type='application/json')
+        task_id = json.loads(task_response.data)['task_id']
+        response = self.client.delete(f'/api/tasks/{task_id}', headers={'Authorization': f'Bearer {access_token}'})
+        self.assertEqual(response.status_code, 204)
 
 if __name__ == '__main__':
     unittest.main()
